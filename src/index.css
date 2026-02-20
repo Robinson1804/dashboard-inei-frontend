@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for sidebar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 10px; }
+
+/* Custom scrollbar for tables and content */
+.custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+/* Sidebar active item */
+.sidebar-active-item {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-left: 4px solid #3b82f6;
+  color: #ffffff;
+}

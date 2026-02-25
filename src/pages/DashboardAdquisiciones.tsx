@@ -789,7 +789,7 @@ const DashboardAdquisiciones: React.FC = () => {
                 }
               : undefined
           }
-          maxWidth="max-w-8xl"
+          maxWidth="max-w-[1300px]"
           footer={
             <button
               onClick={() => setSelectedRowId(null)}

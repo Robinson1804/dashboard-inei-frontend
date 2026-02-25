@@ -685,7 +685,7 @@ const DashboardContratosMenores: React.FC = () => {
           }
           codeBadge={detalle?.codigo ?? selectedRow?.codigo ?? undefined}
           statusBadge={modalEstado ? MODAL_STATUS_BADGE[modalEstado] : undefined}
-          maxWidth="max-w-2xl"
+          maxWidth="max-w-[1300px]"
           footer={
             <button
               onClick={() => setSelectedRowId(null)}

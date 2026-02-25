@@ -13,6 +13,7 @@ import {
   Circle,
   AlertTriangle,
   RefreshCw,
+  ChevronRight,
 } from 'lucide-react';
 
 import KpiCard from '@/components/ui/KpiCard';
@@ -86,6 +87,53 @@ const FASE_LABEL: Record<FaseAdquisicion, string> = {
   SELECCION: 'Seleccion',
   EJECUCION_CONTRACTUAL: 'Ejecucion Contractual',
 };
+
+// ---------------------------------------------------------------------------
+// ProcessFlowBoard constants
+// ---------------------------------------------------------------------------
+
+const NODES_PER_ROW = 4;
+
+const PHASES_CONFIG = [
+  {
+    key: 'ACTUACIONES_PREPARATORIAS',
+    label: 'Actuaciones Preparatorias',
+    shortLabel: 'F1',
+    borderColor: 'border-l-orange-400',
+    bgColor:     'bg-orange-50',
+    dotColor:    'bg-orange-400',
+    textColor:   'text-orange-600',
+    nodeBorder:  'bg-orange-400',
+  },
+  {
+    key: 'SELECCION',
+    label: 'Seleccion',
+    shortLabel: 'F2',
+    borderColor: 'border-l-blue-400',
+    bgColor:     'bg-blue-50',
+    dotColor:    'bg-blue-400',
+    textColor:   'text-blue-600',
+    nodeBorder:  'bg-blue-400',
+  },
+  {
+    key: 'EJECUCION_CONTRACTUAL',
+    label: 'Ejecucion Contractual',
+    shortLabel: 'F3',
+    borderColor: 'border-l-green-400',
+    bgColor:     'bg-green-50',
+    dotColor:    'bg-green-400',
+    textColor:   'text-green-600',
+    nodeBorder:  'bg-green-400',
+  },
+];
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
 
 /** Colours used for the pie/bar chart slices, keyed by estado code. */
 const ESTADO_CHART_COLOR: Record<string, string> = {
@@ -220,19 +268,64 @@ const AreaBadge: React.FC<{ area: string | null }> = ({ area }) => {
 };
 
 // ---------------------------------------------------------------------------
-// Hito timeline inside modal
-// Consumes TimelineHito[] from AdquisicionDetalleFullResponse.procesos
+// ProcessFlowBoard — visual pipeline view for hitos inside modal
 // ---------------------------------------------------------------------------
 
-const HitoTimeline: React.FC<{ hitos: TimelineHito[] }> = ({ hitos }) => {
-  const groups = useMemo(() => {
+const HitoNode: React.FC<{ hito: TimelineHito; nodeBorder: string }> = ({ hito, nodeBorder }) => {
+  const statusStyles: Record<string, string> = {
+    COMPLETADO: 'border-green-200 bg-white',
+    EN_CURSO:   'border-blue-300 bg-blue-50/60 ring-1 ring-blue-200',
+    OBSERVADO:  'border-amber-300 bg-amber-50/60',
+    PENDIENTE:  'border-slate-200 bg-slate-50/50',
+  };
+  const style = statusStyles[hito.estado ?? 'PENDIENTE'] ?? statusStyles['PENDIENTE'];
+
+  return (
+    <div className={`w-[155px] flex-shrink-0 rounded-lg border-2 ${style} overflow-hidden`}>
+      {/* Top phase-color strip */}
+      <div className={`h-1 ${nodeBorder}`} />
+      <div className="p-2.5">
+        {/* Order + status icon */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-mono font-bold text-slate-400">#{hito.orden}</span>
+          <HitoStatusIcon estado={hito.estado} />
+        </div>
+        {/* Title */}
+        <p className="text-[11px] font-semibold text-slate-800 leading-snug line-clamp-2 mb-2 min-h-[2.5rem]">
+          {hito.hito}
+        </p>
+        {/* Area + days */}
+        <div className="flex items-center justify-between gap-1">
+          <AreaBadge area={hito.area_responsable} />
+          {hito.dias_planificados != null && (
+            <span className="text-[10px] text-slate-400">{hito.dias_planificados}d</span>
+          )}
+        </div>
+        {/* Estado badge */}
+        {hito.estado && (
+          <span className={`mt-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+            hito.estado === 'COMPLETADO' ? 'bg-green-100 text-green-700' :
+            hito.estado === 'EN_CURSO'   ? 'bg-blue-100 text-blue-700'  :
+            hito.estado === 'OBSERVADO'  ? 'bg-amber-100 text-amber-700' :
+                                           'bg-slate-100 text-slate-500'
+          }`}>
+            {hito.estado.replace(/_/g, ' ')}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ProcessFlowBoard: React.FC<{ hitos: TimelineHito[] }> = ({ hitos }) => {
+  const hitosByPhase = useMemo(() => {
     const map = new Map<string, TimelineHito[]>();
     hitos.forEach((h) => {
       const key = h.fase ?? 'SIN FASE';
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(h);
     });
-    return Array.from(map.entries());
+    return map;
   }, [hitos]);
 
   const completedCount = hitos.filter((h) => h.estado === 'COMPLETADO').length;
@@ -240,11 +333,11 @@ const HitoTimeline: React.FC<{ hitos: TimelineHito[] }> = ({ hitos }) => {
 
   return (
     <div className="space-y-5">
-      {/* Progress bar */}
+      {/* Global progress bar */}
       <div>
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs font-semibold text-slate-600">Avance de Proceso</span>
-          <span className="text-xs font-bold text-slate-800">{progressPct}%</span>
+        <div className="flex justify-between text-xs mb-1.5">
+          <span className="font-semibold text-slate-600">Avance de Proceso</span>
+          <span className="font-bold text-slate-800">{progressPct}%</span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2">
           <div
@@ -252,72 +345,69 @@ const HitoTimeline: React.FC<{ hitos: TimelineHito[] }> = ({ hitos }) => {
             style={{ width: `${progressPct}%` }}
           />
         </div>
-        <div className="flex gap-4 mt-2">
-          <span className="text-[11px] text-green-600 font-medium">{completedCount} completados</span>
-          <span className="text-[11px] text-slate-400">de {hitos.length} hitos</span>
-        </div>
+        <p className="text-[11px] text-slate-400 mt-1">
+          <span className="text-green-600 font-medium">{completedCount} completados</span>
+          {' '}de {hitos.length} hitos
+        </p>
       </div>
 
-      {/* Hitos grouped by phase */}
-      {groups.map(([fase, faseHitos]) => (
-        <div key={fase}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              {fase !== 'SIN FASE' ? FASE_LABEL[fase as FaseAdquisicion] ?? fase : 'Hitos'}
-            </span>
-            <div className="flex-1 h-px bg-slate-100" />
-          </div>
-          <div className="space-y-2">
-            {faseHitos.map((hito) => (
-              <div
-                key={hito.orden}
-                className={`flex items-start gap-3 p-3 rounded-lg border ${
-                  hito.estado === 'EN_CURSO'
-                    ? 'border-blue-200 bg-blue-50/50'
-                    : hito.estado === 'OBSERVADO'
-                    ? 'border-amber-200 bg-amber-50/50'
-                    : hito.estado === 'COMPLETADO'
-                    ? 'border-slate-100 bg-slate-50/30'
-                    : 'border-slate-100 bg-white'
-                }`}
-              >
-                <div className="mt-0.5">
-                  <HitoStatusIcon estado={hito.estado} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-slate-800 leading-tight">
-                      <span className="text-[10px] font-mono text-slate-400 mr-1.5">#{hito.orden}</span>
-                      {hito.hito}
-                    </span>
-                    <AreaBadge area={hito.area_responsable} />
-                  </div>
-                  <div className="flex items-center gap-3 mt-1 flex-wrap">
-                    {hito.dias_planificados !== null && hito.dias_planificados !== undefined && (
-                      <span className="text-[11px] text-slate-500">{hito.dias_planificados} dias</span>
-                    )}
-                    {hito.fecha_inicio && (
-                      <span className="text-[11px] text-slate-400">
-                        {hito.fecha_inicio}{hito.fecha_fin ? ` a ${hito.fecha_fin}` : ''}
-                      </span>
-                    )}
-                    {hito.estado && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                        hito.estado === 'COMPLETADO' ? 'text-green-700 bg-green-50' :
-                        hito.estado === 'EN_CURSO'   ? 'text-blue-700 bg-blue-50'  :
-                        hito.estado === 'OBSERVADO'  ? 'text-amber-700 bg-amber-50' :
-                                                       'text-slate-500 bg-slate-50'
-                      }`}>
-                        {hito.estado.replace(/_/g, ' ')}
-                      </span>
-                    )}
-                  </div>
-                </div>
+      {/* Phase summary cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {PHASES_CONFIG.map(({ key, label, shortLabel, borderColor, bgColor, dotColor, textColor }) => {
+          const phaseHitos = hitosByPhase.get(key) ?? [];
+          const phaseCompleted = phaseHitos.filter((h) => h.estado === 'COMPLETADO').length;
+          const phasePct = phaseHitos.length > 0 ? Math.round((phaseCompleted / phaseHitos.length) * 100) : 0;
+          return (
+            <div key={key} className={`rounded-xl border-l-4 ${borderColor} ${bgColor} p-3`}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                <span className={`text-[10px] font-bold uppercase tracking-wide ${textColor}`}>
+                  {shortLabel}
+                </span>
               </div>
-            ))}
+              <p className="text-[11px] text-slate-600 leading-tight mb-2">{label}</p>
+              <div className="w-full bg-white/60 rounded-full h-1.5 mb-1">
+                <div className={`h-1.5 rounded-full ${dotColor}`} style={{ width: `${phasePct}%` }} />
+              </div>
+              <p className="text-[10px] text-slate-500">
+                {phaseCompleted}/{phaseHitos.length} · {phasePct}%
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Node flow per phase */}
+      {PHASES_CONFIG.map(({ key, label, dotColor, nodeBorder }) => {
+        const phaseHitos = hitosByPhase.get(key) ?? [];
+        if (phaseHitos.length === 0) return null;
+        const rows = chunkArray(phaseHitos, NODES_PER_ROW);
+        return (
+          <div key={key} className="mb-2">
+            {/* Phase section header */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`w-3 h-3 rounded-full flex-shrink-0 ${dotColor}`} />
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
+              <div className="flex-1 h-px bg-slate-100" />
+            </div>
+            {/* Rows of nodes */}
+            <div className="space-y-3">
+              {rows.map((rowHitos, rowIdx) => (
+                <div key={rowIdx} className="flex items-center gap-2 flex-wrap">
+                  {rowHitos.map((hito, nodeIdx) => (
+                    <React.Fragment key={hito.orden}>
+                      <HitoNode hito={hito} nodeBorder={nodeBorder} />
+                      {nodeIdx < rowHitos.length - 1 && (
+                        <ChevronRight size={16} className="text-slate-300 flex-shrink-0" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -704,7 +794,7 @@ const DashboardAdquisiciones: React.FC = () => {
                 }
               : undefined
           }
-          maxWidth="max-w-3xl"
+          maxWidth="max-w-5xl"
           footer={
             <button
               onClick={() => setSelectedRowId(null)}
@@ -737,24 +827,7 @@ const DashboardAdquisiciones: React.FC = () => {
                 ))}
               </div>
 
-              {/* Phase legend */}
-              <div className="flex items-center gap-6 mb-4 p-3 bg-slate-50 rounded-lg flex-wrap">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fases:</span>
-                <div className="flex gap-4 flex-wrap">
-                  {[
-                    { color: 'bg-orange-400', label: 'F1 — Actuaciones Preparatorias' },
-                    { color: 'bg-blue-400',   label: 'F2 — Seleccion' },
-                    { color: 'bg-green-400',  label: 'F3 — Ejecucion Contractual' },
-                  ].map(({ color, label }) => (
-                    <span key={label} className="flex items-center gap-1.5 text-xs text-slate-600">
-                      <span className={`w-3 h-3 rounded-full ${color}`} />
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Hito timeline — driven by procesos from the nested response */}
+              {/* Process flow board — driven by procesos from the nested response */}
               <div>
                 <h3 className="text-sm font-bold text-slate-800 mb-3">
                   Hitos del Proceso
@@ -769,7 +842,7 @@ const DashboardAdquisiciones: React.FC = () => {
                     No hay hitos registrados para este proceso.
                   </p>
                 ) : (
-                  <HitoTimeline hitos={detalleHitos} />
+                  <ProcessFlowBoard hitos={detalleHitos} />
                 )}
               </div>
             </>

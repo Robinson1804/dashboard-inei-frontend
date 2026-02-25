@@ -24,6 +24,7 @@ import BarChartHorizontal from '@/components/charts/BarChartHorizontal';
 import BarChartTimeline from '@/components/charts/BarChartTimeline';
 
 import { getKpis, getGraficos, getTabla, getDetalle, getFraccionamiento } from '@/api/contratosMenores';
+import { getUnidadesEjecutoras } from '@/api/datosMaestros';
 import { formatMonto, formatPercent } from '@/utils/formatters';
 import { useFilters } from '@/hooks/useFilters';
 
@@ -113,7 +114,7 @@ const TIPO_OBJETO_COLORS: Record<string, string> = {
 // Filter fields
 // ---------------------------------------------------------------------------
 
-const FILTER_FIELDS: FilterField[] = [
+const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anio',
     label: 'Ano Fiscal',
@@ -127,16 +128,10 @@ const FILTER_FIELDS: FilterField[] = [
   },
   {
     key: 'ue_id',
-    label: 'DDNNTT',
+    label: 'Unidad Ejecutora',
     type: 'select',
-    options: [
-      { value: '1', label: 'OTIN' },
-      { value: '2', label: 'OTA'  },
-      { value: '3', label: 'DEC'  },
-      { value: '4', label: 'OTPP' },
-      { value: '5', label: 'SG'   },
-    ],
-    placeholder: 'Todas',
+    options: [],
+    placeholder: 'Todas las UEs',
   },
   {
     key: 'estado',
@@ -281,6 +276,30 @@ const columnHelper = createColumnHelper<ContratoMenorRow>();
 const DashboardContratosMenores: React.FC = () => {
   const { filters, applyFilters, clearFilters } = useFilters({ anio: '2026' });
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+
+  // Fetch unidades ejecutoras for dynamic filter dropdown
+  const { data: unidades } = useQuery({
+    queryKey: ['maestros', 'unidades-ejecutoras'],
+    queryFn: getUnidadesEjecutoras,
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Build filter fields with dynamic UE options
+  const filterFields: FilterField[] = useMemo(() => {
+    return BASE_FILTER_FIELDS.map((field) => {
+      if (field.key === 'ue_id' && unidades) {
+        return {
+          ...field,
+          options: unidades.map((ue) => ({
+            value: String(ue.id),
+            label: `${ue.sigla} - ${ue.nombre}`,
+          })),
+        };
+      }
+      return field;
+    });
+  }, [unidades]);
 
   // Build API filter params from UI filter state
   // Backend expects ue_id as a number (not a ddnntt string)
@@ -537,7 +556,7 @@ const DashboardContratosMenores: React.FC = () => {
       )}
 
       {/* Filter bar */}
-      <FilterBar fields={FILTER_FIELDS} onApply={applyFilters} onClear={clearFilters} />
+      <FilterBar fields={filterFields} onApply={applyFilters} onClear={clearFilters} />
 
       {/* KPI cards
           Backend fields: total, monto_total, completados, en_proceso,

@@ -22,6 +22,7 @@ import {
   getProgramadoVsEjecutado,
   getTabla,
 } from '@/api/actividadesOperativas';
+import { getUnidadesEjecutoras } from '@/api/datosMaestros';
 import { formatMonto, formatPercent } from '@/utils/formatters';
 import { useFilters } from '@/hooks/useFilters';
 
@@ -32,7 +33,7 @@ import type { AOTablaRow } from '@/types/actividadOperativa';
 // Filter fields
 // ---------------------------------------------------------------------------
 
-const FILTER_FIELDS: FilterField[] = [
+const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anio',
     label: 'Ano Fiscal',
@@ -49,16 +50,7 @@ const FILTER_FIELDS: FilterField[] = [
     label: 'Unidad Ejecutora',
     type: 'select',
     placeholder: 'Todas las UEs',
-    options: [
-      { value: '1', label: 'OTIN'  },
-      { value: '2', label: 'DEC'   },
-      { value: '3', label: 'OTA'   },
-      { value: '4', label: 'OTPP'  },
-      { value: '5', label: 'DNCE'  },
-      { value: '6', label: 'DNCPP' },
-      { value: '7', label: 'DNEL'  },
-      { value: '8', label: 'DTI'   },
-    ],
+    options: [],
   },
   {
     key: 'mes',
@@ -200,6 +192,30 @@ const calcDesviacion = (row: AOTablaRow): number =>
 const DashboardActividadesOperativas = () => {
   const { filters, applyFilters, clearFilters } = useFilters({ anio: '2026' });
 
+  // Fetch unidades ejecutoras for dynamic filter dropdown
+  const { data: unidades } = useQuery({
+    queryKey: ['maestros', 'unidades-ejecutoras'],
+    queryFn: getUnidadesEjecutoras,
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Build filter fields with dynamic UE options
+  const filterFields: FilterField[] = useMemo(() => {
+    return BASE_FILTER_FIELDS.map((field) => {
+      if (field.key === 'ue_id' && unidades) {
+        return {
+          ...field,
+          options: unidades.map((ue) => ({
+            value: String(ue.id),
+            label: `${ue.sigla} - ${ue.nombre}`,
+          })),
+        };
+      }
+      return field;
+    });
+  }, [unidades]);
+
   // Build API-compatible filter params.
   // The AO endpoints only accept `anio` and `ue_id` query params.
   const apiFilters = useMemo<FilterParams>(() => ({
@@ -287,7 +303,7 @@ const DashboardActividadesOperativas = () => {
   return (
     <div className="space-y-6">
       {/* Filter bar */}
-      <FilterBar fields={FILTER_FIELDS} onApply={applyFilters} onClear={clearFilters} />
+      <FilterBar fields={filterFields} onApply={applyFilters} onClear={clearFilters} />
 
       {/* KPI cards */}
       {kpisError ? (

@@ -21,6 +21,7 @@ import BarChartGrouped from '@/components/charts/BarChartGrouped';
 import BarChartHorizontal from '@/components/charts/BarChartHorizontal';
 
 import { getKpis, getGraficos, getTabla, getDetalle } from '@/api/adquisiciones';
+import { getUnidadesEjecutoras } from '@/api/datosMaestros';
 import { formatMonto, formatPercent } from '@/utils/formatters';
 import { useFilters } from '@/hooks/useFilters';
 
@@ -139,7 +140,7 @@ const ESTADO_CHART_COLOR: Record<string, string> = {
 // Filter fields
 // ---------------------------------------------------------------------------
 
-const FILTER_FIELDS: FilterField[] = [
+const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anioFiscal',
     label: 'Ano Fiscal',
@@ -149,6 +150,13 @@ const FILTER_FIELDS: FilterField[] = [
       { value: '2025', label: '2025' },
       { value: '2024', label: '2024' },
     ],
+  },
+  {
+    key: 'ue_id',
+    label: 'Unidad Ejecutora',
+    type: 'select',
+    placeholder: 'Todas las UEs',
+    options: [],
   },
   {
     key: 'estado',
@@ -423,9 +431,34 @@ const DashboardAdquisiciones: React.FC = () => {
   const { filters, applyFilters, clearFilters } = useFilters({ anioFiscal: '2026' });
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
 
+  // Fetch unidades ejecutoras for dynamic filter dropdown
+  const { data: unidades } = useQuery({
+    queryKey: ['maestros', 'unidades-ejecutoras'],
+    queryFn: getUnidadesEjecutoras,
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Build filter fields with dynamic UE options
+  const filterFields: FilterField[] = useMemo(() => {
+    return BASE_FILTER_FIELDS.map((field) => {
+      if (field.key === 'ue_id' && unidades) {
+        return {
+          ...field,
+          options: unidades.map((ue) => ({
+            value: String(ue.id),
+            label: `${ue.sigla} - ${ue.nombre}`,
+          })),
+        };
+      }
+      return field;
+    });
+  }, [unidades]);
+
   // Map the UI filter keys to the exact backend query parameter names
   const apiFilters = useMemo<FilterParams>(() => ({
     anio: filters.anioFiscal ? parseInt(filters.anioFiscal as string, 10) : undefined,
+    ue_id: filters.ue_id ? parseInt(filters.ue_id as string, 10) : undefined,
     estado: (filters.estado as string) || undefined,
     tipo_procedimiento: (filters.tipo_procedimiento as string) || undefined,
     mes: filters.mes ? parseInt(filters.mes as string, 10) : undefined,
@@ -616,7 +649,7 @@ const DashboardAdquisiciones: React.FC = () => {
       </div>
 
       {/* Filter bar */}
-      <FilterBar fields={FILTER_FIELDS} onApply={applyFilters} onClear={clearFilters} />
+      <FilterBar fields={filterFields} onApply={applyFilters} onClear={clearFilters} />
 
       {/* KPI cards */}
       {kpisError ? (

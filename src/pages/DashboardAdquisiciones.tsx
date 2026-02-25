@@ -88,7 +88,7 @@ const FASE_LABEL: Record<FaseAdquisicion, string> = {
 // ProcessFlowBoard constants
 // ---------------------------------------------------------------------------
 
-const NODES_PER_ROW = 6;
+const NODES_PER_ROW = 9;
 
 const PHASES_CONFIG = [
   {
@@ -266,27 +266,27 @@ const HitoNode: React.FC<{ hito: TimelineHito }> = ({ hito }) => {
   const status = statusCfg[hito.estado ?? 'PENDIENTE'] ?? statusCfg['PENDIENTE'];
 
   return (
-    <div className="flex flex-col items-center flex-shrink-0 w-[175px]">
+    <div className="flex flex-col items-center flex-shrink-0 w-[130px]">
       {/* Card */}
-      <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col gap-2 min-h-[120px]">
+      <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-2.5 flex flex-col gap-1.5 min-h-[110px]">
         {/* Number badge */}
-        <span className="self-start inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-slate-800 text-white text-[10px] font-bold tracking-wide">
+        <span className="self-start inline-flex items-center justify-center px-1.5 py-0.5 rounded-md bg-slate-800 text-white text-[9px] font-bold tracking-wide">
           #{hito.orden}
         </span>
         {/* Title */}
-        <p className="text-[12px] font-semibold text-slate-800 leading-snug line-clamp-3 flex-1">
+        <p className="text-[11px] font-semibold text-slate-800 leading-snug line-clamp-3 flex-1">
           {hito.hito}
         </p>
         {/* Area + days */}
         <div className="flex items-center justify-between gap-1 mt-auto pt-1 border-t border-slate-50">
           <AreaBadge area={hito.area_responsable} />
           {hito.dias_planificados != null && (
-            <span className="text-[11px] text-slate-400 font-medium">{hito.dias_planificados}d</span>
+            <span className="text-[10px] text-slate-400 font-medium">{hito.dias_planificados}d</span>
           )}
         </div>
       </div>
       {/* Status badge below card */}
-      <span className={`mt-2 inline-block text-[10px] font-bold px-3 py-1 rounded-full tracking-wide ${status.cls}`}>
+      <span className={`mt-1.5 inline-block text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide ${status.cls}`}>
         {status.label}
       </span>
     </div>
@@ -789,7 +789,7 @@ const DashboardAdquisiciones: React.FC = () => {
                 }
               : undefined
           }
-          maxWidth="max-w-[1500px]"
+          maxWidth="max-w-8xl"
           footer={
             <button
               onClick={() => setSelectedRowId(null)}

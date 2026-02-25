@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { Wallet, FileCheck, CircleDollarSign, TrendingUp, RefreshCw, Building2, Target } from 'lucide-react';
+import { Wallet, FileCheck, HandCoins, CircleDollarSign, TrendingUp, RefreshCw, Building2, Target } from 'lucide-react';
 
 import KpiCard from '@/components/ui/KpiCard';
 import FilterBar from '@/components/ui/FilterBar';
@@ -145,6 +145,26 @@ const BASE_FILTER_FIELDS: FilterField[] = [
       { value: 'DON', label: 'Donaciones y Transferencias' },
     ],
   },
+  {
+    key: 'mes',
+    label: 'Mes',
+    type: 'select',
+    placeholder: 'Todos los meses',
+    options: [
+      { value: '1',  label: 'Enero'      },
+      { value: '2',  label: 'Febrero'    },
+      { value: '3',  label: 'Marzo'      },
+      { value: '4',  label: 'Abril'      },
+      { value: '5',  label: 'Mayo'       },
+      { value: '6',  label: 'Junio'      },
+      { value: '7',  label: 'Julio'      },
+      { value: '8',  label: 'Agosto'     },
+      { value: '9',  label: 'Septiembre' },
+      { value: '10', label: 'Octubre'    },
+      { value: '11', label: 'Noviembre'  },
+      { value: '12', label: 'Diciembre'  },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -203,6 +223,7 @@ const DashboardPresupuesto = () => {
     ue_id: filters.ue ? parseInt(filters.ue as string, 10) : undefined,
     meta_id: filters.meta ? parseInt(filters.meta as string, 10) : undefined,
     fuente: (filters.fuenteFinanciamiento as string) || undefined,
+    mes: filters.mes ? parseInt(filters.mes as string, 10) : undefined,
   }), [filters]);
 
   // Fetch KPIs
@@ -310,6 +331,7 @@ const DashboardPresupuesto = () => {
   // ---------------------------------------------------------------------------
   const kpiPim = kpis ? formatMonto(kpis.pim_total) : '—';
   const kpiCertificado = kpis ? formatMonto(kpis.certificado_total) : '—';
+  const kpiComprometido = kpis ? formatMonto(kpis.comprometido_total) : '—';
   const kpiDevengado = kpis ? formatMonto(kpis.devengado_total) : '—';
   const kpiEjecucion = kpis ? formatPercent(kpis.ejecucion_porcentaje) : '—';
   const kpiTotalUes = kpis ? String(kpis.total_ues) : '—';
@@ -367,9 +389,9 @@ const DashboardPresupuesto = () => {
           onRetry={refetchKpis}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6">
           {kpisLoading ? (
-            Array.from({ length: 6 }).map((_, i) => <KpiSkeleton key={i} />)
+            Array.from({ length: 7 }).map((_, i) => <KpiSkeleton key={i} />)
           ) : (
             <>
               <KpiCard
@@ -395,6 +417,12 @@ const DashboardPresupuesto = () => {
                 value={kpiCertificado}
                 icon={FileCheck}
                 iconBgColor="bg-amber-100 text-amber-600"
+              />
+              <KpiCard
+                label="Comprometido"
+                value={kpiComprometido}
+                icon={HandCoins}
+                iconBgColor="bg-orange-100 text-orange-600"
               />
               <KpiCard
                 label="Devengado"

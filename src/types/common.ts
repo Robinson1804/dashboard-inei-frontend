@@ -41,6 +41,7 @@ export interface FilterParams {
   /** Adquisiciones >8 UIT: OSCE procedure type (backend query param). */
   tipo_procedimiento?: string;
   fase?: string;
+  mes?: number;
   [key: string]: string | number | undefined;
 }
 

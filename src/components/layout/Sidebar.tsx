@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -9,6 +10,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { getResumen } from '@/api/alertas';
 
 interface NavItem {
   to: string;
@@ -23,19 +25,34 @@ interface SidebarProps {
 }
 
 const principalItems: NavItem[] = [
-  { to: '/dashboard/presupuesto', label: 'Dashboard Presupuestal', icon: LayoutDashboard },
+  { to: '/dashboard/presupuesto', label: 'Tablero de Control Gerencial', icon: LayoutDashboard },
   { to: '/dashboard/adquisiciones', label: 'Adquisiciones > 8 UIT', icon: ShoppingBag },
   { to: '/dashboard/contratos-menores', label: 'Contratos ≤ 8 UIT', icon: FileText },
   { to: '/dashboard/actividades-operativas', label: 'Actividades Operativas', icon: ClipboardList },
 ];
 
-const herramientasItems: NavItem[] = [
+const herramientasBaseItems: NavItem[] = [
   { to: '/importacion', label: 'Importación de Datos', icon: CloudUpload },
-  { to: '/alertas', label: 'Alertas', icon: Bell, badge: 5 },
+  { to: '/alertas', label: 'Alertas', icon: Bell },
 ];
 
 const Sidebar = ({ collapsed, onToggle: _onToggle }: SidebarProps) => {
   const location = useLocation();
+
+  const { data: alertaResumen } = useQuery({
+    queryKey: ['alertas', 'resumen'],
+    queryFn: getResumen,
+    retry: 1,
+    staleTime: 60 * 1000,
+  });
+
+  const alertaBadge = alertaResumen?.no_leidas ?? 0;
+
+  const herramientasItems: NavItem[] = herramientasBaseItems.map((item) =>
+    item.to === '/alertas' && alertaBadge > 0
+      ? { ...item, badge: alertaBadge }
+      : item
+  );
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;

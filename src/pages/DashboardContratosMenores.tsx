@@ -163,6 +163,26 @@ const FILTER_FIELDS: FilterField[] = [
     ],
     placeholder: 'Todos',
   },
+  {
+    key: 'mes',
+    label: 'Mes',
+    type: 'select',
+    placeholder: 'Todos los meses',
+    options: [
+      { value: '1',  label: 'Enero'      },
+      { value: '2',  label: 'Febrero'    },
+      { value: '3',  label: 'Marzo'      },
+      { value: '4',  label: 'Abril'      },
+      { value: '5',  label: 'Mayo'       },
+      { value: '6',  label: 'Junio'      },
+      { value: '7',  label: 'Julio'      },
+      { value: '8',  label: 'Agosto'     },
+      { value: '9',  label: 'Septiembre' },
+      { value: '10', label: 'Octubre'    },
+      { value: '11', label: 'Noviembre'  },
+      { value: '12', label: 'Diciembre'  },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -270,6 +290,7 @@ const DashboardContratosMenores: React.FC = () => {
     meta_id:    filters.meta_id ? parseInt(filters.meta_id as string, 10): undefined,
     estado:     (filters.estado as string)      || undefined,
     tipo_objeto:(filters.tipo_objeto as string) || undefined,
+    mes:        filters.mes     ? parseInt(filters.mes as string, 10)    : undefined,
   }), [filters]);
 
   const anio = apiFilters.anio ?? 2026;

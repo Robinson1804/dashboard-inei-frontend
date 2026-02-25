@@ -31,7 +31,7 @@ const Layout = () => {
           onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
         <main className="flex-1 overflow-y-auto bg-background-light p-6 custom-scrollbar">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <Outlet />
           </div>
         </main>

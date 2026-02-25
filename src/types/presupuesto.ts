@@ -9,6 +9,7 @@ export interface KpiPresupuesto {
   total_metas: number;
   pim_total: number;
   certificado_total: number;
+  comprometido_total: number;
   devengado_total: number;
   ejecucion_porcentaje: number;
 }

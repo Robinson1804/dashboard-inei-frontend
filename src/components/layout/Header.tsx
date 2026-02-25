@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 const routeTitles: Record<string, string> = {
-  '/dashboard/presupuesto': 'Dashboard Presupuestal',
+  '/dashboard/presupuesto': 'Tablero de Control Gerencial',
   '/dashboard/adquisiciones': 'Adquisiciones > 8 UIT',
   '/dashboard/contratos-menores': 'Contratos Menores ≤ 8 UIT',
   '/dashboard/actividades-operativas': 'Actividades Operativas',

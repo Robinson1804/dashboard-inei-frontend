@@ -8,12 +8,8 @@ import {
   BadgeDollarSign,
   Target,
   Eye,
-  CheckCircle2,
-  Loader2,
-  Circle,
   AlertTriangle,
   RefreshCw,
-  ChevronRight,
 } from 'lucide-react';
 
 import KpiCard from '@/components/ui/KpiCard';
@@ -31,7 +27,6 @@ import { useFilters } from '@/hooks/useFilters';
 import type { FilterField, FilterParams } from '@/types/common';
 import type {
   EstadoAdquisicion,
-  EstadoHito,
   FaseAdquisicion,
   TimelineHito,
   AdquisicionRow,
@@ -92,38 +87,32 @@ const FASE_LABEL: Record<FaseAdquisicion, string> = {
 // ProcessFlowBoard constants
 // ---------------------------------------------------------------------------
 
-const NODES_PER_ROW = 4;
+const NODES_PER_ROW = 6;
 
 const PHASES_CONFIG = [
   {
     key: 'ACTUACIONES_PREPARATORIAS',
     label: 'Actuaciones Preparatorias',
     shortLabel: 'F1',
-    borderColor: 'border-l-orange-400',
-    bgColor:     'bg-orange-50',
-    dotColor:    'bg-orange-400',
-    textColor:   'text-orange-600',
-    nodeBorder:  'bg-orange-400',
+    badgeBg:     'bg-orange-400',
+    progressBar: 'bg-orange-400',
+    sectionBg:   'bg-slate-50',
   },
   {
     key: 'SELECCION',
     label: 'Seleccion',
     shortLabel: 'F2',
-    borderColor: 'border-l-blue-400',
-    bgColor:     'bg-blue-50',
-    dotColor:    'bg-blue-400',
-    textColor:   'text-blue-600',
-    nodeBorder:  'bg-blue-400',
+    badgeBg:     'bg-violet-500',
+    progressBar: 'bg-violet-500',
+    sectionBg:   'bg-slate-50',
   },
   {
     key: 'EJECUCION_CONTRACTUAL',
     label: 'Ejecucion Contractual',
     shortLabel: 'F3',
-    borderColor: 'border-l-green-400',
-    bgColor:     'bg-green-50',
-    dotColor:    'bg-green-400',
-    textColor:   'text-green-600',
-    nodeBorder:  'bg-green-400',
+    badgeBg:     'bg-emerald-500',
+    progressBar: 'bg-emerald-500',
+    sectionBg:   'bg-slate-50',
   },
 ];
 
@@ -241,18 +230,6 @@ const FaseBadge: React.FC<{ fase: FaseAdquisicion | string | null }> = ({ fase }
   );
 };
 
-const HitoStatusIcon: React.FC<{ estado: EstadoHito | string | null }> = ({ estado }) => {
-  switch (estado) {
-    case 'COMPLETADO':
-      return <CheckCircle2 size={18} className="text-green-500 flex-shrink-0" />;
-    case 'EN_CURSO':
-      return <Loader2 size={18} className="text-blue-500 flex-shrink-0 animate-spin" />;
-    case 'OBSERVADO':
-      return <AlertTriangle size={18} className="text-amber-500 flex-shrink-0" />;
-    default:
-      return <Circle size={18} className="text-slate-300 flex-shrink-0" />;
-  }
-};
 
 const AreaBadge: React.FC<{ area: string | null }> = ({ area }) => {
   if (!area) return null;
@@ -271,48 +248,39 @@ const AreaBadge: React.FC<{ area: string | null }> = ({ area }) => {
 // ProcessFlowBoard — visual pipeline view for hitos inside modal
 // ---------------------------------------------------------------------------
 
-const HitoNode: React.FC<{ hito: TimelineHito; nodeBorder: string }> = ({ hito, nodeBorder }) => {
-  const statusStyles: Record<string, string> = {
-    COMPLETADO: 'border-green-200 bg-white',
-    EN_CURSO:   'border-blue-300 bg-blue-50/60 ring-1 ring-blue-200',
-    OBSERVADO:  'border-amber-300 bg-amber-50/60',
-    PENDIENTE:  'border-slate-200 bg-slate-50/50',
+const HitoNode: React.FC<{ hito: TimelineHito }> = ({ hito }) => {
+  const statusCfg: Record<string, { label: string; cls: string }> = {
+    COMPLETADO: { label: 'COMPLETADO', cls: 'bg-green-100 text-green-700'   },
+    EN_CURSO:   { label: 'EN CURSO',   cls: 'bg-blue-100 text-blue-700'    },
+    OBSERVADO:  { label: 'OBSERVADO',  cls: 'bg-amber-100 text-amber-700'  },
+    PENDIENTE:  { label: 'PENDIENTE',  cls: 'bg-slate-100 text-slate-500'  },
   };
-  const style = statusStyles[hito.estado ?? 'PENDIENTE'] ?? statusStyles['PENDIENTE'];
+  const status = statusCfg[hito.estado ?? 'PENDIENTE'] ?? statusCfg['PENDIENTE'];
 
   return (
-    <div className={`w-[155px] flex-shrink-0 rounded-lg border-2 ${style} overflow-hidden`}>
-      {/* Top phase-color strip */}
-      <div className={`h-1 ${nodeBorder}`} />
-      <div className="p-2.5">
-        {/* Order + status icon */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-mono font-bold text-slate-400">#{hito.orden}</span>
-          <HitoStatusIcon estado={hito.estado} />
-        </div>
+    <div className="flex flex-col items-center flex-shrink-0 w-[175px]">
+      {/* Card */}
+      <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col gap-2 min-h-[120px]">
+        {/* Number badge */}
+        <span className="self-start inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-slate-800 text-white text-[10px] font-bold tracking-wide">
+          #{hito.orden}
+        </span>
         {/* Title */}
-        <p className="text-[11px] font-semibold text-slate-800 leading-snug line-clamp-2 mb-2 min-h-[2.5rem]">
+        <p className="text-[12px] font-semibold text-slate-800 leading-snug line-clamp-3 flex-1">
           {hito.hito}
         </p>
         {/* Area + days */}
-        <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center justify-between gap-1 mt-auto pt-1 border-t border-slate-50">
           <AreaBadge area={hito.area_responsable} />
           {hito.dias_planificados != null && (
-            <span className="text-[10px] text-slate-400">{hito.dias_planificados}d</span>
+            <span className="text-[11px] text-slate-400 font-medium">{hito.dias_planificados}d</span>
           )}
         </div>
-        {/* Estado badge */}
-        {hito.estado && (
-          <span className={`mt-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-            hito.estado === 'COMPLETADO' ? 'bg-green-100 text-green-700' :
-            hito.estado === 'EN_CURSO'   ? 'bg-blue-100 text-blue-700'  :
-            hito.estado === 'OBSERVADO'  ? 'bg-amber-100 text-amber-700' :
-                                           'bg-slate-100 text-slate-500'
-          }`}>
-            {hito.estado.replace(/_/g, ' ')}
-          </span>
-        )}
       </div>
+      {/* Status badge below card */}
+      <span className={`mt-2 inline-block text-[10px] font-bold px-3 py-1 rounded-full tracking-wide ${status.cls}`}>
+        {status.label}
+      </span>
     </div>
   );
 };
@@ -329,76 +297,70 @@ const ProcessFlowBoard: React.FC<{ hitos: TimelineHito[] }> = ({ hitos }) => {
   }, [hitos]);
 
   const completedCount = hitos.filter((h) => h.estado === 'COMPLETADO').length;
-  const progressPct = hitos.length > 0 ? Math.round((completedCount / hitos.length) * 100) : 0;
 
   return (
-    <div className="space-y-5">
-      {/* Global progress bar */}
-      <div>
-        <div className="flex justify-between text-xs mb-1.5">
-          <span className="font-semibold text-slate-600">Avance de Proceso</span>
-          <span className="font-bold text-slate-800">{progressPct}%</span>
-        </div>
-        <div className="w-full bg-slate-100 rounded-full h-2">
-          <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-        <p className="text-[11px] text-slate-400 mt-1">
-          <span className="text-green-600 font-medium">{completedCount} completados</span>
-          {' '}de {hitos.length} hitos
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="text-center pb-1">
+        <h4 className="text-base font-bold text-slate-800">Flujo del Proceso de Contratacion</h4>
+        <p className="text-[11px] text-slate-400 mt-0.5">
+          {hitos.length} Hitos · {completedCount} completados
         </p>
       </div>
 
       {/* Phase summary cards */}
       <div className="grid grid-cols-3 gap-3">
-        {PHASES_CONFIG.map(({ key, label, shortLabel, borderColor, bgColor, dotColor, textColor }) => {
+        {PHASES_CONFIG.map(({ key, label, shortLabel, badgeBg, progressBar }) => {
           const phaseHitos = hitosByPhase.get(key) ?? [];
           const phaseCompleted = phaseHitos.filter((h) => h.estado === 'COMPLETADO').length;
           const phasePct = phaseHitos.length > 0 ? Math.round((phaseCompleted / phaseHitos.length) * 100) : 0;
           return (
-            <div key={key} className={`rounded-xl border-l-4 ${borderColor} ${bgColor} p-3`}>
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-                <span className={`text-[10px] font-bold uppercase tracking-wide ${textColor}`}>
-                  {shortLabel}
-                </span>
+            <div key={key} className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col gap-3 overflow-hidden">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${badgeBg}`}>
+                  <span className="text-white text-sm font-black">{shortLabel}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800 leading-tight">{label}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    {phaseCompleted}/{phaseHitos.length} · {phasePct}%
+                  </p>
+                </div>
               </div>
-              <p className="text-[11px] text-slate-600 leading-tight mb-2">{label}</p>
-              <div className="w-full bg-white/60 rounded-full h-1.5 mb-1">
-                <div className={`h-1.5 rounded-full ${dotColor}`} style={{ width: `${phasePct}%` }} />
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all duration-500 ${progressBar}`}
+                  style={{ width: `${phasePct}%` }}
+                />
               </div>
-              <p className="text-[10px] text-slate-500">
-                {phaseCompleted}/{phaseHitos.length} · {phasePct}%
-              </p>
             </div>
           );
         })}
       </div>
 
-      {/* Node flow per phase */}
-      {PHASES_CONFIG.map(({ key, label, dotColor, nodeBorder }) => {
+      {/* Phase sections */}
+      {PHASES_CONFIG.map(({ key, label, shortLabel, badgeBg, sectionBg }) => {
         const phaseHitos = hitosByPhase.get(key) ?? [];
         if (phaseHitos.length === 0) return null;
         const rows = chunkArray(phaseHitos, NODES_PER_ROW);
         return (
-          <div key={key} className="mb-2">
-            {/* Phase section header */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`w-3 h-3 rounded-full flex-shrink-0 ${dotColor}`} />
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
-              <div className="flex-1 h-px bg-slate-100" />
+          <div key={key} className={`${sectionBg} rounded-2xl border border-slate-100 p-5`}>
+            {/* Phase header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${badgeBg}`}>
+                <span className="text-white text-sm font-black">{shortLabel}</span>
+              </div>
+              <h4 className="text-base font-bold text-slate-800">{label}</h4>
             </div>
-            {/* Rows of nodes */}
-            <div className="space-y-3">
+            {/* Node rows */}
+            <div className="space-y-6">
               {rows.map((rowHitos, rowIdx) => (
-                <div key={rowIdx} className="flex items-center gap-2 flex-wrap">
+                <div key={rowIdx} className="flex items-start gap-1 flex-wrap">
                   {rowHitos.map((hito, nodeIdx) => (
                     <React.Fragment key={hito.orden}>
-                      <HitoNode hito={hito} nodeBorder={nodeBorder} />
+                      <HitoNode hito={hito} />
                       {nodeIdx < rowHitos.length - 1 && (
-                        <ChevronRight size={16} className="text-slate-300 flex-shrink-0" />
+                        <span className="self-center text-slate-300 text-lg font-light flex-shrink-0 px-0.5">→</span>
                       )}
                     </React.Fragment>
                   ))}

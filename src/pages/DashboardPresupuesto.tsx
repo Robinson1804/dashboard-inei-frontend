@@ -135,17 +135,6 @@ const BASE_FILTER_FIELDS: FilterField[] = [
     options: [],
   },
   {
-    key: 'fuenteFinanciamiento',
-    label: 'Fuente de Financiamiento',
-    type: 'select',
-    placeholder: 'Todas las fuentes',
-    options: [
-      { value: 'RO', label: 'Recursos Ordinarios (RO)' },
-      { value: 'RDR', label: 'Recursos Directamente Recaudados (RDR)' },
-      { value: 'DON', label: 'Donaciones y Transferencias' },
-    ],
-  },
-  {
     key: 'mes',
     label: 'Mes',
     type: 'select',
@@ -222,7 +211,6 @@ const DashboardPresupuesto = () => {
     anio: filters.anio ? parseInt(filters.anio as string, 10) : undefined,
     ue_id: filters.ue ? parseInt(filters.ue as string, 10) : undefined,
     meta_id: filters.meta ? parseInt(filters.meta as string, 10) : undefined,
-    fuente: (filters.fuenteFinanciamiento as string) || undefined,
     mes: filters.mes ? parseInt(filters.mes as string, 10) : undefined,
   }), [filters]);
 

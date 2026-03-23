@@ -117,7 +117,7 @@ const TIPO_OBJETO_COLORS: Record<string, string> = {
 const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anio',
-    label: 'Ano Fiscal',
+    label: 'Año Fiscal',
     type: 'select',
     options: [
       { value: '2026', label: '2026' },

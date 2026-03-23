@@ -36,9 +36,9 @@ import type { AOTablaRow } from '@/types/actividadOperativa';
 const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anio',
-    label: 'Ano Fiscal',
+    label: 'Año Fiscal',
     type: 'select',
-    placeholder: 'Todos los anos',
+    placeholder: 'Todos los años',
     options: [
       { value: '2026', label: '2026' },
       { value: '2025', label: '2025' },

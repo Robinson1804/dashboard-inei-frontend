@@ -111,9 +111,9 @@ const COLUMNS: ColumnDef<TablaPresupuestoRow, any>[] = [
 const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anio',
-    label: 'Ano',
+    label: 'Año',
     type: 'select',
-    placeholder: 'Todos los anos',
+    placeholder: 'Todos los años',
     options: [
       { value: '2024', label: '2024' },
       { value: '2025', label: '2025' },

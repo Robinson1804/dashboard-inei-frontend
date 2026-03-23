@@ -143,7 +143,7 @@ const ESTADO_CHART_COLOR: Record<string, string> = {
 const BASE_FILTER_FIELDS: FilterField[] = [
   {
     key: 'anioFiscal',
-    label: 'Ano Fiscal',
+    label: 'Año Fiscal',
     type: 'select',
     options: [
       { value: '2026', label: '2026' },
@@ -644,7 +644,7 @@ const DashboardAdquisiciones: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
-          Ano Fiscal {filters.anioFiscal ?? '2026'}
+          Año Fiscal {filters.anioFiscal ?? '2026'}
         </div>
       </div>
 
